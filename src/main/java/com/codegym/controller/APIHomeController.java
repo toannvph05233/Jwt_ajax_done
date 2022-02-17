@@ -3,15 +3,16 @@ package com.codegym.controller;
 import com.codegym.model.AppUser;
 import com.codegym.service.IAppUserService;
 import com.codegym.service.JwtService;
-import net.bytebuddy.asm.Advice;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @CrossOrigin("*")
@@ -31,6 +32,7 @@ public class APIHomeController {
     @PostMapping("/login")
     public String login(@RequestBody AppUser appUser) {
         try {
+
             // Tạo ra 1 đối tượng Authentication.
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(appUser.getUserName(), appUser.getPassword()));
@@ -44,6 +46,11 @@ public class APIHomeController {
 
     }
 
+    @ExceptionHandler(Exception.class)
+    public String handleError() {
+        return "error";
+    }
+
     @PostMapping("/register")
     public void register(@RequestBody AppUser appUser) {
         String pass = passwordEncoder.encode(appUser.getPassword());
@@ -51,8 +58,14 @@ public class APIHomeController {
         userService.save(appUser);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/hello")
     public String hello(){
         return "helllo";
+    }
+
+    @GetMapping("/users")
+    public List<AppUser> users(){
+        return userService.getAll();
     }
 }
